@@ -1,22 +1,139 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LocalNotes - Simple Note-taking Web App</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>LocalNotes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+        }
+        .note-list {
+            margin: 20px 0;
+        }
+        .note-item {
+            background: #eee;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .note-item span {
+            flex: 1;
+        }
+        .note-item button {
+            margin-left: 10px;
+        }
+        .note-form {
+            margin-bottom: 20px;
+        }
+        .note-form input, .note-form textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>LocalNotes</h1>
-        <form id="noteForm">
-            <input type="text" id="noteTitle" placeholder="Enter note title" required>
-            <textarea id="noteContent" placeholder="Enter note content" required></textarea>
-            <button type="submit">Save Note</button>
-        </form>
-        <div id="notesList"></div>
+        <div class="note-form">
+            <input type="text" id="noteTitle" placeholder="Title">
+            <textarea id="noteContent" rows="5" placeholder="Content"></textarea>
+            <button onclick="saveNote()">Save Note</button>
+            <button onclick="clearNotes()">Clear All Notes</button>
+        </div>
+        <div class="note-list" id="noteList"></div>
     </div>
-    <script src="script.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', loadNotes);
+
+        function loadNotes() {
+            const notes = JSON.parse(localStorage.getItem('notes')) || [];
+            const noteList = document.getElementById('noteList');
+            noteList.innerHTML = '';
+            notes.forEach((note, index) => {
+                const noteItem = document.createElement('div');
+                noteItem.className = 'note-item';
+                noteItem.innerHTML = `
+                    <span>
+                        <strong>${note.title}</strong><br>
+                        ${note.content}
+                    </span>
+                    <button onclick="editNote(${index})">Edit</button>
+                    <button onclick="deleteNote(${index})">Delete</button>
+                `;
+                noteList.appendChild(noteItem);
+            });
+        }
+
+        function saveNote() {
+            const title = document.getElementById('noteTitle').value;
+            const content = document.getElementById('noteContent').value;
+            if (title === '' || content === '') {
+                alert('Both title and content are required.');
+                return;
+            }
+
+            const notes = JSON.parse(localStorage.getItem('notes')) || [];
+            const editedNoteIndex = document.getElementById('noteTitle').dataset.index;
+
+            if (editedNoteIndex) {
+                notes[editedNoteIndex] = { title, content };
+                delete document.getElementById('noteTitle').dataset.index;
+            } else {
+                notes.push({ title, content });
+            }
+
+            localStorage.setItem('notes', JSON.stringify(notes));
+            loadNotes();
+            clearForm();
+        }
+
+        function deleteNote(index) {
+            const notes = JSON.parse(localStorage.getItem('notes'));
+            notes.splice(index, 1);
+            localStorage.setItem('notes', JSON.stringify(notes));
+            loadNotes();
+        }
+
+        function clearNotes() {
+            localStorage.removeItem('notes');
+            loadNotes();
+        }
+
+        function clearForm() {
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteContent').value = '';
+        }
+
+        function editNote(index) {
+            const notes = JSON.parse(localStorage.getItem('notes'));
+            const note = notes[index];
+            document.getElementById('noteTitle').value = note.title;
+            document.getElementById('noteContent').value = note.content;
+            document.getElementById('noteTitle').dataset.index = index;
+        }
+    </script>
 </body>
 </html>
